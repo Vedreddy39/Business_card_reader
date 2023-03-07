@@ -40,7 +40,7 @@ st.write("Analyzing image...")
 extracted_info = extract_info(image)
 st.write("Extracted information:")
 for key, value in extracted_info.items():
-        print(f"{key}: {value}")
+    st.write(f"{key}: {value}")
 
 
 
