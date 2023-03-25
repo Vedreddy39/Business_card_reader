@@ -1,38 +1,60 @@
-#pip install streamlit
-#pip install easyocr
+import easyocr as ocr  
+import streamlit as st  
+from PIL import Image 
+import numpy as np 
 
-import streamlit as st
-import easyocr
+st.set_page_config(page_title='Business Card Reader', layout='wide')
 
-
-def extract_info(image):
-    reader = easyocr.Reader(['en'], gpu=False)
-    result = reader.readtext(image)
-    extracted_info = {'company_name': '','card holder name': '','designation': '','mobile_number': '','email_address': '','website_url': '', 'address': ''}
-   
-    extracted_info['card holder name'] = result[0][1]
-    extracted_info['designation'] = result[1][1] 
-    
-    for r in result:
-        if '@' in r[1] and '.com' in r[1]:
-            extracted_info['email_address'] = r[1]
-        elif '.com' in r[1]:
-            extracted_info['website_url'] = r[1]
-        elif '+' in r[1]:
-            extracted_info['mobile_number'] = r[1]
-        elif 'St' in r[1] or 'Rd' in r[1]:
-            extracted_info['address'] = r[1]
-
-    return extracted_info
-
+#title
 st.title("Business Card Reader")
-st.caption('Using Easyocr')
-image = st.file_uploader(label = "Upload your image", type = ['jpeg', 'png', 'jpg'])
-st.write("")
-st.write("Analyzing image...")
-extracted_info = extract_info(image)
-st.write("Extracted information:")
-for key, value in extracted_info.items():
-    st.write(f"{key}: {value}")
 
+#subtitle
+st.subheader("Using `easyocr`, `streamlit`")
+
+#image uploader
+image = st.file_uploader(label = "Upload your image here",type=['png','jpg','jpeg'])
+
+
+@st.cache_data
+def load_model(): 
+    reader = ocr.Reader(['en'],model_storage_directory='.')
+    return reader 
+
+
+
+if image is not None:
+    reader = load_model() #load model
+    input_image = Image.open(image) #read image
+    st.image(input_image) #display image
+
+    with st.spinner("🤖 AI is at Work! "):
+        
+
+        result = reader.readtext(np.array(input_image))
+
+        result_text = {'Company Name': '','Card Holder Name': '','Designation': '','Mobile Number': '','Email Address': '','Website url': '', 'Area': ''}
+       
+        result_text['Card Holder Name'] = result[0][1]
+        result_text['Designation'] = result[1][1] 
+        
+        for r in result:
+            if '@' in r[1]:
+                result_text['Email Address'] = r[1]
+            elif '.com' in r[1]:
+                result_text['Website url'] = r[1]
+            elif '+' in r[1]:
+                result_text['Mobile Number'] = r[1]
+            elif 'St' in r[1] or 'Rd' in r[1]:
+                result_text['Area'] = r[1]
+           
+            else:
+                result_text['Company Name'] = r[1]
+
+
+        st.write(result_text)
     
+    st.balloons()
+else:
+    st.write("Upload an Image")
+
+st.caption("Made by Ved")
